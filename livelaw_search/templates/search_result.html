@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block header %}
+<h1>{% block title %}SEARCH RESULTS{% endblock %}</h1>
+{% endblock %}
+{% block content %}
+<form method="post">
+    <br>
+    {% for i in log_within_date %}
+    <div>
+        <tr>
+            <td>
+
+
+                <h4>
+                    {{ i["_source"]["heading"] }}</h4>
+                {{"id:"}}
+                {{ i["_source"]["id"] }}
+            </td>
+            <br>
+            <br>
+            {% endfor %}
+        </tr>
+    </div>
+
+
+    <p>Next :</p>
+    <div class="pagination">
+        <button onClick="window.location.reload();">❯</button>
+    </div>
+</form>
+{% endblock %}

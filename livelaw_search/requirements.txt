@@ -1,0 +1,4 @@
+flask
+elasticsearch
+mysql.connector
+virtualenv

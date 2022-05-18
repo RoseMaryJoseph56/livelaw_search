@@ -5,9 +5,13 @@ from flask import (
     Blueprint,
 )
 from elasticsearch import Elasticsearch
+from dotenv import find_dotenv, load_dotenv
 
-ES_HOST = os.environ.get("ES_HOST")
-es = Elasticsearch("http://localhost:9200")
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+ES_HOST = os.environ.get("ES_HOST"))
+es = Elasticsearch(ES_HOST)
 
 bp = Blueprint("livelaw", __name__, url_prefix="/news")
 

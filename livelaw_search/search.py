@@ -74,8 +74,11 @@ def get_data(search_term, current_page=0):
     }
     page = es.search(index="livelaw", body=body)
     search_result = page["hits"]["hits"]
+    news_result = []
+    for i in search_result:
+        news_result.append(i["_source"])
     search_count = page["hits"]["total"]["value"]
-    return search_count, search_result, current_page + 1
+    return search_count, news_result, current_page + 1
 
 
 class SearchNewsArticleApi(Resource):

@@ -7,7 +7,9 @@ from flask import (
 )
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
+from flasgger import SwaggerView
 from .task import insert_to_index
+from .api_docs import search_api_parameters, search_api_responses,insert_api_parameters,insert_api_responses
 
 dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path)
@@ -81,24 +83,35 @@ def get_data(search_term, current_page=0):
     return search_count, news_result, current_page + 1
 
 
-class SearchNewsArticleApi(Resource):
+class SearchNewsArticleApi(Resource, SwaggerView):
+    parameters = search_api_parameters
+    responses = search_api_responses
+
     def post(self):
-        """Function to get json input and retuns related data"""
+        """Returns news articles related to search query"""
         data = request.get_json(force=True)
         page_number = data.get("page", 0)
         search_query = data.get("search_term", "")
-        total_count, search_result, current_page = get_data(
-            search_query, current_page=page_number
-        )
-        result_data = {
-            "total_articles": total_count,
-            "search_result": search_result,
-            "current_page": current_page,
-        }
-        return result_data, 201
+
+        if search_query:
+            total_count, search_result, current_page = get_data(
+                search_query, current_page=page_number
+            )
+            result_data = {
+                "total_articles": total_count,
+                "search_result": search_result,
+                "current_page": current_page,
+            }
+            return result_data, 200
+
+        data = {"message": "Please enter search query"}
+        return result_data, 400
 
 
-class InsertNewsArticlesApi(Resource):
+class InsertNewsArticlesApi(Resource, SwaggerView):
+    parameters=insert_api_parameters
+    responses=insert_api_responses
+
     def post(self):
         """Function to get request data and call insert function"""
         news_data = request.get_json(force=True)

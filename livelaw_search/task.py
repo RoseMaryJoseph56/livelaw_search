@@ -19,5 +19,5 @@ def insert_to_index(news_data):
     """Function to insert data to index"""
     for data in news_data:
         if set(("id", "content", "keywords", "heading", "date")).issubset(data.keys()):
-            res = es.index(index="k", body=data)
+            res = es.index(index="livelaw", body=data)
     return True

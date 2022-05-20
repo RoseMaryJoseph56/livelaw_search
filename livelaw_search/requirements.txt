@@ -1,3 +1,4 @@
 Flask==2.0.3
 elasticsearch==8.1.0
 mysql-connector==2.2.9
+flask_restful==0.3.9

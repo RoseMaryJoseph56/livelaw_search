@@ -6,7 +6,7 @@ from flask import (
     request,
     Blueprint,
 )
-from elasticsearch import Elasticsearch
+from elasticsearch import ConnectionTimeout, Elasticsearch
 from dotenv import load_dotenv
 from flasgger import SwaggerView
 from .task import insert_to_index
@@ -115,7 +115,7 @@ class SearchNewsArticleApi(Resource, SwaggerView):
 
             data = {"message": "Please enter all mandatory fields"}
             return data, 400
-        except Exception as e:
+        except ConnectionTimeout:
             return {"message": "Elasticsearch Connection error"}, 500
 
 
@@ -129,5 +129,5 @@ class InsertNewsArticlesApi(Resource, SwaggerView):
             news_data = request.get_json(force=True)
             insert_to_index(news_data)
             return {"message": "insertion task initiated"}, 201
-        except Exception as e:
-            return {"message": "Elastic connection error"}, 500
+        except ConnectionTimeout:
+            return {"message": "Elasticsearch connection error"}, 500

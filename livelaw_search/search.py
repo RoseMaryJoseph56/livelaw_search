@@ -1,3 +1,4 @@
+import math
 import os
 from flask_restful import Resource
 from flask import (
@@ -9,13 +10,19 @@ from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from flasgger import SwaggerView
 from .task import insert_to_index
-from .api_docs import search_api_parameters, search_api_responses,insert_api_parameters,insert_api_responses
+from .api_docs import (
+    search_api_parameters,
+    search_api_responses,
+    insert_api_parameters,
+    insert_api_responses,
+)
+
 
 dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path)
-
 ES_HOST = os.environ.get("ES_HOST")
 es = Elasticsearch(ES_HOST)
+
 bp = Blueprint("livelaw", __name__, url_prefix="/news")
 
 
@@ -80,7 +87,8 @@ def get_data(search_term, current_page=0):
     for i in search_result:
         news_result.append(i["_source"])
     search_count = page["hits"]["total"]["value"]
-    return search_count, news_result, current_page + 1
+    total_pages = math.ceil(search_count / 20)
+    return search_count, news_result, current_page + 1, total_pages
 
 
 class SearchNewsArticleApi(Resource, SwaggerView):
@@ -89,31 +97,37 @@ class SearchNewsArticleApi(Resource, SwaggerView):
 
     def post(self):
         """Returns news articles related to search query"""
-        data = request.get_json(force=True)
-        page_number = data.get("page", 0)
-        search_query = data.get("search_term", "")
+        try:
+            data = request.get_json(force=True)
+            page_number = data.get("page", 0)
+            search_query = data.get("search_term", "")
+            if search_query and page_number:
+                total_count, search_result, current_page, total_pages = get_data(
+                    search_query, current_page=page_number - 1
+                )
+                result_data = {
+                    "total_articles": total_count,
+                    "search_result": search_result,
+                    "current_page": current_page,
+                    "total_pages": total_pages,
+                }
+                return result_data, 200
 
-        if search_query:
-            total_count, search_result, current_page = get_data(
-                search_query, current_page=page_number
-            )
-            result_data = {
-                "total_articles": total_count,
-                "search_result": search_result,
-                "current_page": current_page,
-            }
-            return result_data, 200
-
-        data = {"message": "Please enter search query"}
-        return result_data, 400
+            data = {"message": "Please enter all mandatory fields"}
+            return data, 400
+        except Exception as e:
+            return {"message": "Elasticsearch Connection error"}, 500
 
 
 class InsertNewsArticlesApi(Resource, SwaggerView):
-    parameters=insert_api_parameters
-    responses=insert_api_responses
+    parameters = insert_api_parameters
+    responses = insert_api_responses
 
     def post(self):
         """Function to get request data and call insert function"""
-        news_data = request.get_json(force=True)
-        insert_to_index(news_data)
-        return {"message": "insertion task initiated"}, 201
+        try:
+            news_data = request.get_json(force=True)
+            insert_to_index(news_data)
+            return {"message": "insertion task initiated"}, 201
+        except Exception as e:
+            return {"message": "Elastic connection error"}, 500

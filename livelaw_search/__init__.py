@@ -8,8 +8,9 @@ def create_app(test_config=None):
     app = Flask(__name__)
     swagger = Swagger(app)
     api = Api(app)
-    app.config.from_pyfile("config.py")
 
+    app.config.from_pyfile('config.py')
+    
     from . import task
 
     app.register_blueprint(task.bp)

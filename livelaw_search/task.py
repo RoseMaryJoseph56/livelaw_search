@@ -20,4 +20,3 @@ def insert_to_index(news_data):
     for data in news_data:
         if set(("id", "content", "keywords", "heading", "date")).issubset(data.keys()):
             res = es.index(index="livelaw", body=data)
-    return True

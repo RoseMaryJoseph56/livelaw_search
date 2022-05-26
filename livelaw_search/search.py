@@ -75,7 +75,7 @@ def get_data(search_term, current_page=0):
                 "type": "phrase",
             }
         },
-        "_source": ["heading", "id"],
+        "_source": ["heading", "id", "pdf_content"],
         "from": from_value,
         "size": 20,
         "sort": [{"date": "desc"}],
@@ -127,7 +127,8 @@ class InsertNewsArticlesApi(Resource, SwaggerView):
         """Function to get request data and call insert function"""
         try:
             news_data = request.get_json(force=True)
-            insert_to_index(news_data)
+            print(news_data,type(news_data))
+            insert_to_index.delay(news_data)
             return {"message": "insertion task initiated"}, 201
         except ConnectionTimeout:
             return {"message": "Elasticsearch connection error"}, 500

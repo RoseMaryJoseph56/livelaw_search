@@ -34,7 +34,7 @@ def search():
             "query": {
                 "multi_match": {
                     "query": search,
-                    "fields": ["content", "heading", "keywords"],
+                    "fields": ["content", "heading", "keywords", "pdf_content"],
                     "operator": "and",
                     "type": "phrase",
                 }
@@ -66,7 +66,7 @@ def get_data(search_term, current_page=0):
         "query": {
             "multi_match": {
                 "query": search_term,
-                "fields": ["content", "heading", "keywords"],
+                "fields": ["content", "heading", "keywords", "pdf_content"],
                 "operator": "and",
                 "type": "phrase",
             }

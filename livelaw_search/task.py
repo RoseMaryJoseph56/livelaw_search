@@ -29,7 +29,6 @@ def extract_text_from_pdf(pdf_file_path):
                 curr_pg = re.sub("\d+\s+of\s+\d+", "", curr_pg)
                 curr_pg = pdf_data.strip()
                 curr_pg = re.sub("(-\s+\d+\s+-)|(-\d+-)|(...\d+/-)", "", curr_pg)
-                curr_pg = re.sub("\d+$", "", curr_pg)
                 curr_pg = re.sub("\d+\s+", "", curr_pg)
                 curr_pg = re.sub("Page", "", curr_pg)
                 pdf_content = pdf_content + curr_pg
@@ -79,5 +78,6 @@ def insert_to_index(news_data):
                     "content": data.get("content"),
                     "date": data.get("date"),
                     "keywords": data.get("keywords"),
+                    "pdf_content": None
                 }
-            res = es.index(index="livelaw", body=articles)
+            res = es.index(index="livelaw_serach", body=articles)

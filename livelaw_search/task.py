@@ -18,6 +18,7 @@ BASE_DIR = os.getcwd()
 
 
 def extract_text_from_pdf(pdf_file_path):
+    """extracting pdf text using pdf plumber and modifying to proper format"""
     try:
         with pdfplumber.open(pdf_file_path) as pdf:
             pdf_content = ""

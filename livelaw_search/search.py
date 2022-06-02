@@ -10,6 +10,7 @@ from elasticsearch import ConnectionTimeout, Elasticsearch
 from dotenv import load_dotenv
 from flasgger import SwaggerView
 from .task import insert_to_index
+from .config import ES_HOST
 from .api_docs import (
     search_api_parameters,
     search_api_responses,
@@ -17,12 +18,7 @@ from .api_docs import (
     insert_api_responses,
 )
 
-
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path)
-ES_HOST = os.environ.get("ES_HOST")
 es = Elasticsearch(ES_HOST)
-
 bp = Blueprint("livelaw", __name__, url_prefix="/news")
 
 
@@ -38,18 +34,18 @@ def search():
             "query": {
                 "multi_match": {
                     "query": search,
-                    "fields": ["content", "heading", "keywords"],
+                    "fields": ["content", "heading", "keywords", "pdf_content"],
                     "operator": "and",
                     "type": "phrase",
                 }
             },
-            "_source": ["heading", "id", "date"],
+            "_source": ["heading", "id"],
             "from": from_value,
             "size": 20,
             "sort": [{"date": "desc"}],
             "track_total_hits": True,
         }
-        page = es.search(index="livelaw", body=body)
+        page = es.search(index="livelaw_search", body=body)
         search_result = page["hits"]["hits"]
         search_count = page["hits"]["total"]["value"]
 
@@ -70,7 +66,7 @@ def get_data(search_term, current_page=0):
         "query": {
             "multi_match": {
                 "query": search_term,
-                "fields": ["content", "heading", "keywords"],
+                "fields": ["content", "heading", "keywords", "pdf_content"],
                 "operator": "and",
                 "type": "phrase",
             }
@@ -81,7 +77,7 @@ def get_data(search_term, current_page=0):
         "sort": [{"date": "desc"}],
         "track_total_hits": True,
     }
-    page = es.search(index="livelaw", body=body)
+    page = es.search(index="livelaw_search", body=body)
     search_result = page["hits"]["hits"]
     news_result = []
     for i in search_result:
@@ -127,7 +123,7 @@ class InsertNewsArticlesApi(Resource, SwaggerView):
         """Function to get request data and call insert function"""
         try:
             news_data = request.get_json(force=True)
-            insert_to_index(news_data)
+            insert_to_index.delay(news_data)
             return {"message": "insertion task initiated"}, 201
         except ConnectionTimeout:
             return {"message": "Elasticsearch connection error"}, 500

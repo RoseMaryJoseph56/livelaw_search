@@ -1,5 +1,5 @@
+from datetime import datetime
 import math
-import os
 from flask_restful import Resource
 from flask import (
     render_template,
@@ -10,7 +10,7 @@ from elasticsearch import ConnectionTimeout, Elasticsearch
 from dotenv import load_dotenv
 from flasgger import SwaggerView
 from .task import insert_to_index
-from .config import ES_HOST
+from .config import ES_HOST, INDEX
 from .api_docs import (
     search_api_parameters,
     search_api_responses,
@@ -45,7 +45,7 @@ def search():
             "sort": [{"date": "desc"}],
             "track_total_hits": True,
         }
-        page = es.search(index="livelaw_search", body=body)
+        page = es.search(index=INDEX, body=body)
         search_result = page["hits"]["hits"]
         search_count = page["hits"]["total"]["value"]
 
@@ -61,7 +61,7 @@ def search():
 
 def get_data(search_term, current_page=0):
     """Function to search and returns data and count"""
-    from_value = current_page * 20
+    from_value = int(current_page * 20)
     body = {
         "query": {
             "multi_match": {
@@ -77,7 +77,7 @@ def get_data(search_term, current_page=0):
         "sort": [{"date": "desc"}],
         "track_total_hits": True,
     }
-    page = es.search(index="livelaw_search", body=body)
+    page = es.search(index=INDEX, body=body)
     search_result = page["hits"]["hits"]
     news_result = []
     for i in search_result:

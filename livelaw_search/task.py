@@ -133,7 +133,9 @@ def insert_to_index(news_data):
                 "date_news": data.get("date"),
                 "parsed_date": parsed_date,
             }
-            sql_insert_list.append(insert_data)
-            json_data.append(articles)
-            res = helpers.bulk(es, json_data, index=INDEX)
-            mysql_status_table(sql_insert_list)
+            if insert_data not in sql_insert_list:
+                sql_insert_list.append(insert_data)
+            if articles not in json_data:
+                json_data.append(articles)
+    res = helpers.bulk(es, json_data, index=INDEX)
+    mysql_status_table(sql_insert_list)

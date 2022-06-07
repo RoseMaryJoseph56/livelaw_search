@@ -1,7 +1,9 @@
 from datetime import datetime
 import math
+import os
 from flask_restful import Resource
 from flask import (
+    current_app,
     render_template,
     request,
     Blueprint,
@@ -9,7 +11,7 @@ from flask import (
 from elasticsearch import ConnectionTimeout, Elasticsearch
 from dotenv import load_dotenv
 from flasgger import SwaggerView
-from .task import insert_to_index
+from .task import fetch_failed_data_from_sql, insert_failed_data_to_index, insert_to_index, mysql_status_table
 from .config import ES_HOST, INDEX
 from .api_docs import (
     search_api_parameters,
@@ -95,20 +97,19 @@ class SearchNewsArticleApi(Resource, SwaggerView):
         """Returns news articles related to search query"""
         try:
             data = request.get_json(force=True)
-            page_number = data.get("page", 0)
+            page_number = int(data.get("page", 0))
             search_query = data.get("search_term", "")
             if search_query and page_number:
                 total_count, search_result, current_page, total_pages = get_data(
-                    search_query, current_page=page_number - 1
+                    search_query, current_page = page_number - 1
                 )
                 result_data = {
                     "total_articles": total_count,
                     "search_result": search_result,
-                    "current_page": current_page,
+                    "current_page": current_page ,
                     "total_pages": total_pages,
                 }
                 return result_data, 200
-
             data = {"message": "Please enter all mandatory fields"}
             return data, 400
         except ConnectionTimeout:
@@ -127,3 +128,14 @@ class InsertNewsArticlesApi(Resource, SwaggerView):
             return {"message": "insertion task initiated"}, 201
         except ConnectionTimeout:
             return {"message": "Elasticsearch connection error"}, 500
+
+
+class InsertNewsArticlesWithParsingError(Resource):
+
+    def post(self):
+        try:
+            insert_failed_data_to_index.delay()
+            return {"message": "data failed, insertion task initiated"}, 201
+        except ConnectionTimeout:
+            return {"message": "Elasticsearch connection error"}, 500
+

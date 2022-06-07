@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<html>
+
+<head>
+</head>
+
+<body>
+    <label for="Search">Search</label>
+    <form id="form" method="post">
+        <input type="text" , id="search_term" placeholder="search_term" required /></br>
+        <input type="hidden" , id="page" value="1" /></br>
+        <button type="button"
+            onclick="getapi(document.getElementById('search_term').value, document.getElementById('page').value)">Submit</button>
+
+    </form>
+    <div>
+        <h4 id="total_pages"></h4>
+        <h4 id="result"></h4>
+    </div>
+
+    <form id="form" method="post">
+        <input type="hidden" id="current_page">
+        <button type="button"
+            onclick="getapi(document.getElementById('search_term').value, document.getElementById('current_page').value)">Next</button>
+    </form>
+
+</body>
+<script>
+
+    async function getapi(search_term, page) {
+
+        fetch('http://127.0.0.1:5000/get_news', {
+            method: 'POST',
+            body: JSON.stringify({
+                search_term: search_term,
+                page: page,
+
+            }),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            }
+        })
+            .then(function (response) {
+                return response.json()
+            })
+
+            .then(function (data) {
+                console.log(data)
+                current_page = data.current_page;
+                total_pages = data.total_pages
+                length = data.search_result.length;
+                console.log(data);
+                var temp = "";
+                for (i = 0; i < length; i++) {
+                    temp += "<tr>";
+                    temp += "<td>" + data.search_result[i].heading + "</td>" + "<br>";
+                    temp += "<td>" + data.search_result[i].id + "</td>" + "<br>" + "<br>";
+                }
+
+                document.getElementById("result").innerHTML = temp;
+                document.getElementById("total_pages").innerHTML = total_pages;
+                document.getElementById("current_page").value = current_page + 1;
+            }).catch(error => console.error('Error:', error));
+    };
+
+
+</script>
+
+</html>
+{% endblock %}
